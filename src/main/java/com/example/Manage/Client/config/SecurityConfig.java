@@ -59,6 +59,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+
                         .requestMatchers(HttpMethod.GET, EndpointConfig.USER_GET)
                         // .hasAnyAuthority("SCOPE_USER", "SCOPE_ADMIN")
                         // .anyRequest().hasAnyAuthority("SCOPE_ADMIN")

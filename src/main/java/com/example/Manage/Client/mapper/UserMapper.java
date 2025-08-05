@@ -18,6 +18,6 @@ public interface UserMapper {
     // @Mapping(target = "dob", ignore = true) ko map trường dob
     void updateUser(@MappingTarget User user, UserCreationRequest request);
 
-
+    @Mapping(target = "roles", ignore = true)
     UserResponse toUserResponse(User user);
 }

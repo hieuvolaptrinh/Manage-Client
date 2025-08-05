@@ -1,6 +1,6 @@
 package com.example.Manage.Client.enums;
 
-public enum Role {
+public enum RoleEnum {
     ADMIN,
     STAFF,
     USER;

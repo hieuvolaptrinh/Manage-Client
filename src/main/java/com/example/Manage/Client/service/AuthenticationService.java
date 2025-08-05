@@ -55,7 +55,9 @@ public class AuthenticationService {
                     // Spring Security tự động parse thành:
                     // - SimpleGrantedAuthority("SCOPE_USER")
                     // - SimpleGrantedAuthority("SCOPE_ADMIN")
-                    .claim("scope", buildScopeRole(user)) // mặt đinh nó ghi scope
+                    // .claim("scope", buildScopeRole(user)) // mặt đinh nó ghi scope
+                    .claim("scope", "USER ADMIN")
+
                     .build();
 
             Payload payload = new Payload(jwtClaimsSet.toJSONObject());

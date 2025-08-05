@@ -13,7 +13,9 @@ public enum ErrorCode {
     USER_EXISTED(1001, "User already exists", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1002, "User not found", HttpStatus.NOT_FOUND),
     INVALID_REQUEST(1003, "Invalid request", HttpStatus.BAD_REQUEST),
-    USERNAME_INVALID(1004, "Username is invalid", HttpStatus.BAD_REQUEST);
+    USERNAME_INVALID(1004, "Username is invalid",
+            HttpStatus.BAD_REQUEST),
+    NOT_FOUND(1005, "Resource not found", HttpStatus.NOT_FOUND);
 
     private int code;
     private String message;
