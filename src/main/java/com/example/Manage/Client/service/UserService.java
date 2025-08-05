@@ -3,6 +3,7 @@ package com.example.Manage.Client.service;
 import java.util.HashSet;
 import java.util.List;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -68,5 +69,14 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public UserResponse getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+
+        String name = context.getAuthentication().getName();
+
+        return userMapper.toUserResponse(
+                userRepository.findByUsername(name));
     }
 }

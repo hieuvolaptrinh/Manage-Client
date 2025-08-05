@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import com.example.Manage.Client.dto.request.ApiResponse;
-import com.example.Manage.Client.dto.response.Notification;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -26,6 +25,7 @@ public class FormatResponse implements ResponseBodyAdvice<Object> {
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();
 
+        // Nếu body đã là ApiResponse, return luôn để tránh double wrapping
         if (body instanceof ApiResponse) {
             return body;
         }
@@ -36,10 +36,7 @@ public class FormatResponse implements ResponseBodyAdvice<Object> {
         // Xử lý lỗi
         if (status >= 400) {
             if (body instanceof String) {
-                apiResponse.setMessage(new Notification((String) body));
-            } else if (body instanceof ApiResponse) {
-                // Nếu body đã là ApiResponse, return luôn để tránh double wrapping
-                return body;
+                apiResponse.setMessage((String) body);
             } else {
                 apiResponse.setMessage("Error occurred");
                 apiResponse.setData(body);
@@ -47,6 +44,7 @@ public class FormatResponse implements ResponseBodyAdvice<Object> {
             return apiResponse;
         }
 
+        // Xử lý success response
         apiResponse.setData(body);
         apiResponse.setMessage("Success");
 

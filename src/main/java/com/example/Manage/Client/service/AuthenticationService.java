@@ -50,7 +50,7 @@ public class AuthenticationService {
                     .subject(user.getUsername())
                     .issuer("Hiếu võ")
                     .issueTime(new Date()) // Thời gian phát hành token
-                    .expirationTime(new Date(Instant.now().toEpochMilli() + 3600000)) // Token hết hạn sau 1 giờ
+                    .expirationTime(new Date(Instant.now().toEpochMilli() + 3600000 * 24)) // Token hết hạn sau 24 giờ
                     .claim("userId", user.getId())
                     // Spring Security tự động parse thành:
                     // - SimpleGrantedAuthority("SCOPE_USER")

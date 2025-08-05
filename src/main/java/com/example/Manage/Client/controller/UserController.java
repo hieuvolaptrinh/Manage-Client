@@ -3,6 +3,8 @@ package com.example.Manage.Client.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,15 +45,16 @@ public class UserController {
         return userService.createUser(request);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        UserResponse user = userService.getUserById(id);
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        }
-        throw new AppException(ErrorCode.USER_NOT_FOUND);
+    @GetMapping("/myInfo")
+    public ResponseEntity<UserResponse> getMyInfo() {
+        return ResponseEntity.ok(userService.getMyInfo());
     }
 
+    // @PostAuthorize("returnObject.username == authentication.name or
+    // hasAuthority('ADMIN')") // kiểm tra sau khi thực
+    // returnObject là response trả về
+
+    @PreAuthorize("hasRole('ADMIN')") // kiểm tra trước khi thực hiện
     @GetMapping("/all")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers();
@@ -82,29 +85,6 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-
-    // ví dụ api để user có thể update thông tin cá nhân của mình
-    @PutMapping("/profile")
-    public ResponseEntity<String> updateMyProfile(@RequestBody @Valid UserCreationRequest request) {
-        // Lấy thông tin user từ JWT token - KHÔNG CẦN @AuthenticationPrincipal
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // In ra thông tin user từ token
-        log.info("=== THÔNG TIN USER TỪ JWT TOKEN ===");
-        log.info("Username từ token: {}", authentication.getName()); // Từ "sub" claim
-        log.info("Authenticated: {}", authentication.isAuthenticated());
-
-        // In ra tất cả authorities (roles)
-        log.info("Authorities từ token:");
-        authentication.getAuthorities().forEach(authority -> {
-            log.info("  - {}", authority.getAuthority()); // VD: SCOPE_USER, SCOPE_ADMIN
-        });
-
-        log.info("User {} đang cập nhật profile với data: {}",
-                authentication.getName(), request.toString());
-
-        return ResponseEntity.ok("Profile updated successfully for user: " + authentication.getName());
     }
 
     @GetMapping("/profile")

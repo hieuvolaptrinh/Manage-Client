@@ -1,28 +1,35 @@
 package com.example.Manage.Client.config;
 
-import java.lang.reflect.Method;
-
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
+import com.example.Manage.Client.dto.request.ApiResponse;
+import com.example.Manage.Client.exception.ErrorCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // phân quyền theo method
 public class SecurityConfig {
 
     @Value("${jwt.signerKey}")
@@ -58,16 +65,58 @@ public class SecurityConfig {
                         .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .anyRequest().hasAnyAuthority("ROLE_ADMIN")
                 // .requestMatchers("/api/auth/**").permitAll()
-                )
-                .httpBasic(httpBasic -> httpBasic.disable()); // Tắt HTTP Basic Auth
+                );
+
+        // bắt 401,403
+        http.exceptionHandling(exception -> exception
+                .authenticationEntryPoint(customAuthenticationEntryPoint())
+                .accessDeniedHandler(customAccessDeniedHandler()));
+
         // Với cấu hình Spring Security OAuth2 Resource Server như này, bạn KHÔNG CẦN
         // viết doFilter() hay tạo custom filter nữa!
-
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigure -> jwtConfigure.decoder(jwtDecoder())
 
                 .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            // Trực tiếp trả về JSON response với format ApiResponse
+            ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+            response.setStatus(errorCode.getHttpStatus().value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+
+            ApiResponse<Object> apiResponse = new ApiResponse<>();
+            apiResponse.setCode(errorCode.getCode());
+            apiResponse.setMessage(errorCode.getMessage());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+            response.getWriter().write(jsonResponse);
+        };
+    }
+
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            // Trực tiếp trả về JSON response với format ApiResponse
+            ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+            response.setStatus(errorCode.getHttpStatus().value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+
+            ApiResponse<Object> apiResponse = new ApiResponse<>();
+            apiResponse.setCode(errorCode.getCode());
+            apiResponse.setMessage(errorCode.getMessage());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonResponse = objectMapper.writeValueAsString(apiResponse);
+            response.getWriter().write(jsonResponse);
+        };
     }
 
     @Bean
