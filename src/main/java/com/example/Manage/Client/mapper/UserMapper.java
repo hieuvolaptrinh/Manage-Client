@@ -1,7 +1,7 @@
 package com.example.Manage.Client.mapper;
 
 import org.mapstruct.Mapper;
-
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import com.example.Manage.Client.dto.request.UserCreationRequest;
@@ -17,6 +17,7 @@ public interface UserMapper {
 
     // @Mapping(target = "dob", ignore = true) ko map trường dob
     void updateUser(@MappingTarget User user, UserCreationRequest request);
+
 
     UserResponse toUserResponse(User user);
 }

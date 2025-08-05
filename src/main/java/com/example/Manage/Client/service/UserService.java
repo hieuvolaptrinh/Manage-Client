@@ -41,7 +41,7 @@ public class UserService {
 
         roles.add(Role.USER.name()); // Gán vai trò USER từ enum
 
-        user.setRoles(roles); // Thiết lập vai trò cho người dùng
+        // user.setRoles(roles); // Thiết lập vai trò cho người dùng
         return userRepository.save(user);
     }
 

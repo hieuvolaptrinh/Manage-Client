@@ -14,6 +14,6 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL) // nghĩa là nếu data là null thì sẽ không được serialize
 public class ApiResponse<T> {
     private int code;
-    private Object message;
+    private String message;
     private T data;
 }
