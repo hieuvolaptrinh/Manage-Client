@@ -1,8 +1,8 @@
 package com.example.Manage.Client.service;
 
+import java.util.HashSet;
 import java.util.List;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import com.example.Manage.Client.entity.User;
+import com.example.Manage.Client.enums.Role;
 import com.example.Manage.Client.exception.AppException;
 import com.example.Manage.Client.exception.ErrorCode;
 import com.example.Manage.Client.mapper.UserMapper;
@@ -35,6 +36,11 @@ public class UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Mã hóa mật khẩu
 
+        HashSet<String> roles = new HashSet<>();
+
+        roles.add(Role.USER.name()); // Gán vai trò USER từ enum
+
+        user.setRoles(roles); // Thiết lập vai trò cho người dùng
         return userRepository.save(user);
     }
 

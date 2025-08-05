@@ -1,6 +1,7 @@
 package com.example.Manage.Client.entity;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @NoArgsConstructor
@@ -17,15 +19,15 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = lombok.AccessLevel.PRIVATE) // private fields
 public class User {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
-    private Long id;
-    private String username;
-    private String password;
-    private String lastName;
-    private String firstName;
-
-    private LocalDate dob;
-
+    Long id;
+    String username;
+    String password;
+    String lastName;
+    String firstName;
+    LocalDate dob;
+    Set<String> roles;
 }
