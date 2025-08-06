@@ -19,7 +19,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 public class InvalidateToken {
-
+    // viết logic xóa token đã hết hạn, hoặc token đã bị thu hồi sau 1 khoảng thời
+    // gian nhất định. xài schedule để xóa token đã hết hạn
     @Id
     String id;
 

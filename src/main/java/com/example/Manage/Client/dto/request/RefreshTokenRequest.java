@@ -11,8 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class PermissionRequest {
+public class RefreshTokenRequest {
 
-   String name;
-   String description;
+    String token;
 }

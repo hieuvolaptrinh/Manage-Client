@@ -2,19 +2,20 @@ package com.example.Manage.Client.service;
 
 import java.text.ParseException;
 import java.time.Instant;
-
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.CollectionUtils;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.Manage.Client.dto.request.AuthenticationRequest;
 import com.example.Manage.Client.dto.request.IntrospectRequest;
 import com.example.Manage.Client.dto.request.LogoutRequest;
+import com.example.Manage.Client.dto.request.RefreshTokenRequest;
 import com.example.Manage.Client.dto.response.AuthenticationResponse;
 import com.example.Manage.Client.dto.response.IntrospectResponse;
 import com.example.Manage.Client.entity.InvalidateToken;
@@ -46,9 +47,18 @@ public class AuthenticationService {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
     InvalidateTokenRepository invalidateTokenRepository;
+
     @NonFinal
     @Value("${jwt.signerKey}")
     String SECRET_KEY;
+
+    @NonFinal
+    @Value("${jwt.validDuration}")
+    long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable.duration}")
+    long REFRESH_DURATION;
 
     public String generateToken(User user) {
         try {
@@ -58,8 +68,12 @@ public class AuthenticationService {
                     .subject(user.getUsername())
                     .issuer("Hiếu võ")
                     .issueTime(new Date()) // Thời gian phát hành token
-                    .expirationTime(new Date(Instant.now().toEpochMilli() + 3600000 * 24)) // Token hết hạn
-                                                                                           // sau 24 giờ
+                    .expirationTime(new Date(
+                            Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli())) // Thời
+                                                                                                    // gian
+                                                                                                    // hết
+                                                                                                    // hạn
+                                                                                                    // token
                     .claim("userId", user.getId())
                     // Spring Security tự động parse thành:
                     // - SimpleGrantedAuthority("SCOPE_USER")
@@ -97,27 +111,33 @@ public class AuthenticationService {
     // logout
     public void logout(LogoutRequest logoutRequest) throws JOSEException, ParseException {
 
-        var signToken = verifyToken(logoutRequest.getToken());
+        var signToken = verifyToken(logoutRequest.getToken(), true); // để nếu còn hiệu lực thì mới lấy được JIT
 
         String jit = signToken.getJWTClaimsSet().getJWTID();
 
-        java.util.Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
         InvalidateToken invalidateToken = InvalidateToken.builder()
                 .id(jit)
                 .expiryTime(expiryTime)
                 .build();
         invalidateTokenRepository.save(invalidateToken);
+
     }
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        java.util.Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant().plus(REFRESH_DURATION,
+                        ChronoUnit.SECONDS).toEpochMilli())
+
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
         var verified = signedJWT.verify(verifier);
-        if (!(verified && expiryTime.after(new java.util.Date()))) {
+
+        if (!(verified && expiryTime.after(new Date()))) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
 
         }
@@ -145,11 +165,33 @@ public class AuthenticationService {
                 .authenticated(true).build();
     }
 
+    // refresh token
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws Exception {
+        var signedJWT = verifyToken(request.getToken(), true);
+
+        // var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        // var expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("Ko thấy user");
+        }
+
+        // tạo token mới
+        String newToken = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(newToken)
+                .authenticated(true)
+                .build();
+    }
+    // kiểm tra token
+
     public IntrospectResponse introspect(IntrospectRequest request) throws Exception {
         var token = request.getToken();
         boolean isValid = true;
         try {
-            verifyToken(token);
+            verifyToken(token, false);
         } catch (Exception e) {
             isValid = false;
         }

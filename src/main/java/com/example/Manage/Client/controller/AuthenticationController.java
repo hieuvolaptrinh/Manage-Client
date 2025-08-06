@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Manage.Client.dto.request.AuthenticationRequest;
 import com.example.Manage.Client.dto.request.IntrospectRequest;
 import com.example.Manage.Client.dto.request.LogoutRequest;
+import com.example.Manage.Client.dto.request.RefreshTokenRequest;
 import com.example.Manage.Client.dto.response.AuthenticationResponse;
 import com.example.Manage.Client.dto.response.IntrospectResponse;
 import com.example.Manage.Client.service.AuthenticationService;
@@ -16,7 +17,10 @@ import lombok.experimental.FieldDefaults;
 
 import java.text.ParseException;
 
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Lettuce.Cluster.Refresh;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -31,6 +35,12 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticated(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest request)
+            throws Exception {
+        return ResponseEntity.ok(authenticationService.refreshToken(request));
     }
 
     @PostMapping("/introspect")

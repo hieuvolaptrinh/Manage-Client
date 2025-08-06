@@ -1,10 +1,13 @@
 package com.example.Manage.Client.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,6 +90,23 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ví dụ lấy để xác định user bằng token truyền về
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal Jwt jwt) {
+        // Jwt.getSubject() = claim "sub"
+        String userId = jwt.getSubject();
+        String email = jwt.getClaimAsString("userId"); // nếu bạn thêm claim "email"
+        // Bạn có thể lấy roles nếu để trong claim "roles"
+        List<String> roles = jwt.getClaimAsStringList("scope");
+
+        Map<String, Object> profile = Map.of(
+                "userId", userId,
+                "email", email,
+                "roles", roles);
+        return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/profile")
