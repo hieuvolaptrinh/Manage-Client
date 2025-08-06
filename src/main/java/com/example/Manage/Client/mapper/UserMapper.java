@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-import com.example.Manage.Client.dto.request.UserCreationRequest;
+import com.example.Manage.Client.dto.request.UserRequest;
 import com.example.Manage.Client.dto.response.UserResponse;
 import com.example.Manage.Client.entity.User;
 
@@ -13,11 +13,13 @@ public interface UserMapper {
 
     // @Mapping(source = "...", target = "...") — chỉ rõ DTO.field → Entity.field.
     // @Mapping(source = "fullName", target = "name")
-    User toUser(UserCreationRequest request);
-
-    // @Mapping(target = "dob", ignore = true) ko map trường dob
-    void updateUser(@MappingTarget User user, UserCreationRequest request);
+    @Mapping(target = "roles", ignore = true)
+    User toUser(UserRequest request);
 
     @Mapping(target = "roles", ignore = true)
+    void updateUser(@MappingTarget User user, UserRequest request);
+
+    @Mapping(target = "roles", ignore = true)
+
     UserResponse toUserResponse(User user);
 }

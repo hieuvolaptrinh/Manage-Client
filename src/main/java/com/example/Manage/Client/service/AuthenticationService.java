@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.StringJoiner;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.CollectionUtils;
@@ -55,8 +56,8 @@ public class AuthenticationService {
                     // Spring Security tự động parse thành:
                     // - SimpleGrantedAuthority("SCOPE_USER")
                     // - SimpleGrantedAuthority("SCOPE_ADMIN")
-                    // .claim("scope", buildScopeRole(user)) // mặt đinh nó ghi scope
-                    .claim("scope", "USER ADMIN")
+                    .claim("scope", buildScopeRole(user)) // mặt đinh nó ghi scope
+                    // .claim("scope", "USER ADMIN")
 
                     .build();
 
@@ -71,11 +72,18 @@ public class AuthenticationService {
     }
 
     private String buildScopeRole(User user) {
-        StringBuilder scopeRole = new StringBuilder(" ");
+        StringJoiner stringJoiner = new StringJoiner(" ");
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
-            user.getRoles().forEach(role -> scopeRole.append(role).append(" "));
+            user.getRoles().forEach(role -> {
+                stringJoiner.add("ROLE_" + role.getName());
+                if (role.getPermissions() != null && !role.getPermissions().isEmpty()) {
+                    role.getPermissions().forEach(permission -> {
+                        stringJoiner.add(permission.getName());
+                    });
+                }
+            });
         }
-        return scopeRole.toString();
+        return stringJoiner.toString();
     }
 
     public AuthenticationResponse authenticated(AuthenticationRequest request) {

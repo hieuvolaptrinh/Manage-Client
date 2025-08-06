@@ -1,6 +1,7 @@
 package com.example.Manage.Client.dto.request;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -14,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @AllArgsConstructor
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
-public class UserCreationRequest {
+public class UserRequest {
 
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     String username;
@@ -26,4 +27,6 @@ public class UserCreationRequest {
     String firstName;
 
     LocalDate dob;
+    List<String> roles;
+
 }

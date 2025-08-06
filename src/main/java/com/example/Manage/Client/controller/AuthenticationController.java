@@ -7,7 +7,6 @@ import com.example.Manage.Client.dto.request.AuthenticationRequest;
 import com.example.Manage.Client.dto.request.IntrospectRequest;
 import com.example.Manage.Client.dto.response.AuthenticationResponse;
 import com.example.Manage.Client.dto.response.IntrospectResponse;
-import com.example.Manage.Client.dto.response.Notification;
 import com.example.Manage.Client.service.AuthenticationService;
 
 import lombok.RequiredArgsConstructor;

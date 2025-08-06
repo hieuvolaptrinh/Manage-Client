@@ -20,11 +20,11 @@ public class UserResponse {
 
     Long id;
     String username;
-    String password;
+
     String lastName;
     String firstName;
     LocalDate dob;
-    Set<String> roles;
+    Set<RoleResponse> roles;
 
     // You can add additional fields or methods as needed
 }

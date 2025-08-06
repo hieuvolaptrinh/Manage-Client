@@ -27,4 +27,6 @@ public class Role {
     @ManyToMany
     Set<Permission> permissions;
 
+    @ManyToMany
+    Set<User> users;
 }

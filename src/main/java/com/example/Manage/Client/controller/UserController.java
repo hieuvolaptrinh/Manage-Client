@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.Manage.Client.dto.request.UserCreationRequest;
+import com.example.Manage.Client.dto.request.UserRequest;
 import com.example.Manage.Client.dto.response.Notification;
 import com.example.Manage.Client.dto.response.UserResponse;
 import com.example.Manage.Client.entity.User;
@@ -41,7 +41,7 @@ public class UserController {
     }
 
     @PostMapping("")
-    public User createUser(@RequestBody @Valid UserCreationRequest request) {
+    public User createUser(@RequestBody @Valid UserRequest request) {
         return userService.createUser(request);
     }
 
@@ -54,7 +54,9 @@ public class UserController {
     // hasAuthority('ADMIN')") // kiểm tra sau khi thực
     // returnObject là response trả về
 
-    @PreAuthorize("hasRole('ADMIN')") // kiểm tra trước khi thực hiện
+    // @PreAuthorize("hasRole('ROLE_ADMIN')") //=> role là nó đã thêm prefix rồi,
+    // còn authority thì không
+    @PreAuthorize("hasAuthority('APPROVE_POST')")
     @GetMapping("/all")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userService.getAllUsers();
@@ -73,7 +75,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,
-            @RequestBody @Valid UserCreationRequest request) {
+            @RequestBody @Valid UserRequest request) {
         UserResponse updatedUser = userService.updateUser(id, request);
         if (updatedUser != null) {
             return ResponseEntity.ok(updatedUser);

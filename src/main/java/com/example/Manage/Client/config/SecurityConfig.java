@@ -46,7 +46,9 @@ public class SecurityConfig {
 
         // ở đây có thể cấu hình jwt ví dụ như SCOPE_ thành ROLE_ , ngăn cách giữa các
         // role, rồi claimName nữa
-        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        // jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix(""); // vì bên authen có thêm ROLE_ rồi
+
         // role,...
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
@@ -65,6 +67,7 @@ public class SecurityConfig {
                         // .hasAnyAuthority("SCOPE_USER", "SCOPE_ADMIN")
                         // .anyRequest().hasAnyAuthority("SCOPE_ADMIN")
                         .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        // .anyRequest().permitAll()
                         .anyRequest().hasAnyAuthority("ROLE_ADMIN")
                 // .requestMatchers("/api/auth/**").permitAll()
                 );
