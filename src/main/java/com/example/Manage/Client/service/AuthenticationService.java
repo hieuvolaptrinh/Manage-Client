@@ -1,10 +1,11 @@
 package com.example.Manage.Client.service;
 
+import java.text.ParseException;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
+
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.CollectionUtils;
@@ -13,10 +14,16 @@ import org.springframework.stereotype.Service;
 
 import com.example.Manage.Client.dto.request.AuthenticationRequest;
 import com.example.Manage.Client.dto.request.IntrospectRequest;
+import com.example.Manage.Client.dto.request.LogoutRequest;
 import com.example.Manage.Client.dto.response.AuthenticationResponse;
 import com.example.Manage.Client.dto.response.IntrospectResponse;
+import com.example.Manage.Client.entity.InvalidateToken;
 import com.example.Manage.Client.entity.User;
+import com.example.Manage.Client.exception.AppException;
+import com.example.Manage.Client.exception.ErrorCode;
+import com.example.Manage.Client.repository.InvalidateTokenRepository;
 import com.example.Manage.Client.repository.UserRepository;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -38,7 +45,7 @@ public class AuthenticationService {
 
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
-
+    InvalidateTokenRepository invalidateTokenRepository;
     @NonFinal
     @Value("${jwt.signerKey}")
     String SECRET_KEY;
@@ -51,14 +58,15 @@ public class AuthenticationService {
                     .subject(user.getUsername())
                     .issuer("Hiếu võ")
                     .issueTime(new Date()) // Thời gian phát hành token
-                    .expirationTime(new Date(Instant.now().toEpochMilli() + 3600000 * 24)) // Token hết hạn sau 24 giờ
+                    .expirationTime(new Date(Instant.now().toEpochMilli() + 3600000 * 24)) // Token hết hạn
+                                                                                           // sau 24 giờ
                     .claim("userId", user.getId())
                     // Spring Security tự động parse thành:
                     // - SimpleGrantedAuthority("SCOPE_USER")
                     // - SimpleGrantedAuthority("SCOPE_ADMIN")
                     .claim("scope", buildScopeRole(user)) // mặt đinh nó ghi scope
                     // .claim("scope", "USER ADMIN")
-
+                    .jwtID(UUID.randomUUID().toString())
                     .build();
 
             Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -86,6 +94,42 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
+    // logout
+    public void logout(LogoutRequest logoutRequest) throws JOSEException, ParseException {
+
+        var signToken = verifyToken(logoutRequest.getToken());
+
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+
+        java.util.Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidateToken invalidateToken = InvalidateToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+        invalidateTokenRepository.save(invalidateToken);
+    }
+
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        java.util.Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        var verified = signedJWT.verify(verifier);
+        if (!(verified && expiryTime.after(new java.util.Date()))) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        }
+
+        if (invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        return signedJWT;
+    }
+
+    // login
     public AuthenticationResponse authenticated(AuthenticationRequest request) {
         var user = userRepository.findByUsername(request.getUsername());
 
@@ -103,14 +147,14 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws Exception {
         var token = request.getToken();
-        JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
-
-        SignedJWT signedJWT = SignedJWT.parse(token);
-
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-        var verified = signedJWT.verify(verifier);
+        boolean isValid = true;
+        try {
+            verifyToken(token);
+        } catch (Exception e) {
+            isValid = false;
+        }
         return IntrospectResponse.builder()
-                .valid(verified && expiryTime.after(new Date()))
+                .valid(isValid)
                 .build();
 
     }

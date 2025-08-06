@@ -9,10 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE) // private fields
-public class IntrospectRequest {
+public class LogoutRequest {
     String token;
-
 }

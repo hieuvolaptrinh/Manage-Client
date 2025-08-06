@@ -19,7 +19,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 public class UserRequest {
 
-    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+    @Size(min = 3, max = 20, message = "USERNAME_INVALID")
     String username;
 
     @Size(min = 6, message = "Password must be at least 6 characters long")
@@ -28,7 +28,7 @@ public class UserRequest {
     String lastName;
     String firstName;
 
-    @DobConstraint(min = 18, message = "INVALID_DATE_OF_BIRTH")
+    @DobConstraint(min = 10, message = "INVALID_DATE_OF_BIRTH")
     LocalDate dob;
 
     List<String> roles;

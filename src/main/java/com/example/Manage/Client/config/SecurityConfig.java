@@ -3,6 +3,7 @@ package com.example.Manage.Client.config;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,9 @@ public class SecurityConfig {
     @Value("${jwt.signerKey}")
     private String SECRET_KEY;
 
+    @Autowired
+    private CustomeJwtDecoder customeJwtDecoder;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
@@ -60,7 +64,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(EndpointConfig.PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
 
                         .requestMatchers(HttpMethod.GET, EndpointConfig.USER_GET)
@@ -79,7 +83,7 @@ public class SecurityConfig {
 
         // Với cấu hình Spring Security OAuth2 Resource Server như này, bạn KHÔNG CẦN
         // viết doFilter() hay tạo custom filter nữa!
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigure -> jwtConfigure.decoder(jwtDecoder())
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigure -> jwtConfigure.decoder(customeJwtDecoder)
 
                 .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
@@ -124,11 +128,4 @@ public class SecurityConfig {
         };
     }
 
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "HS512");
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
-    };
 }

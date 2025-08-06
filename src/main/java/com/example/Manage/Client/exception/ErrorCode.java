@@ -13,7 +13,7 @@ public enum ErrorCode {
     USER_EXISTED(1001, "User already exists", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1002, "User not found", HttpStatus.NOT_FOUND),
     INVALID_REQUEST(1003, "Invalid request", HttpStatus.BAD_REQUEST),
-    USERNAME_INVALID(1004, "Username is invalid",
+    USERNAME_INVALID(1004, "Username must have {min} to {max} characters",
             HttpStatus.BAD_REQUEST),
     NOT_FOUND(1005, "Resource not found", HttpStatus.NOT_FOUND),
     INVALID_DATE_OF_BIRTH(1006, "Your age must be at least {min}", HttpStatus.BAD_REQUEST);
