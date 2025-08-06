@@ -3,6 +3,8 @@ package com.example.Manage.Client.dto.request;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.example.Manage.Client.validator.DobConstraint;
+
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,7 +28,9 @@ public class UserRequest {
     String lastName;
     String firstName;
 
+    @DobConstraint(min = 18, message = "INVALID_DATE_OF_BIRTH")
     LocalDate dob;
+
     List<String> roles;
 
 }

@@ -15,7 +15,8 @@ public enum ErrorCode {
     INVALID_REQUEST(1003, "Invalid request", HttpStatus.BAD_REQUEST),
     USERNAME_INVALID(1004, "Username is invalid",
             HttpStatus.BAD_REQUEST),
-    NOT_FOUND(1005, "Resource not found", HttpStatus.NOT_FOUND);
+    NOT_FOUND(1005, "Resource not found", HttpStatus.NOT_FOUND),
+    INVALID_DATE_OF_BIRTH(1006, "Your age must be at least {min}", HttpStatus.BAD_REQUEST);
 
     private int code;
     private String message;

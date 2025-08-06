@@ -2,6 +2,7 @@ package com.example.Manage.Client.exception;
 
 import java.util.stream.Collectors;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import org.springframework.security.access.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -19,6 +23,7 @@ import com.example.Manage.Client.dto.request.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final String MIN_ATTRIBUTE = "min";
 
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse<Object>> handleRuntimeException(Exception ex) {
@@ -53,9 +58,26 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> validationError(MethodArgumentNotValidException ex) {
         BindingResult result = ex.getBindingResult();
         final List<FieldError> fieldErrors = result.getFieldErrors();
+        //
 
+        String enumKey = ex.getFieldError().getDefaultMessage();
+        ErrorCode errorCode = ErrorCode.INVALID_KEY;
+
+        Map<String, Object> attributes = null;
+        try {
+            errorCode = ErrorCode.valueOf(enumKey);
+            var constraintViolation = ex.getBindingResult().getAllErrors().getFirst().unwrap(ConstraintViolation.class);
+
+            // lấy atribute từ ConstraintViolation ví dụ như message, min, max, v.v.
+            // {group=javax.validation.groups.Default, payload=[], message=Invalid date of
+            // birth, min=18}
+            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        //
         ApiResponse<Object> res = new ApiResponse<>();
-        res.setCode(HttpStatus.BAD_REQUEST.value());
+        res.setCode(errorCode.getCode() != 0 ? errorCode.getCode() : HttpStatus.BAD_REQUEST.value());
 
         // Lọc lỗi và lấy thông tin lỗi
         List<String> errors = fieldErrors.stream()
@@ -63,7 +85,8 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toList());
 
         // Luôn set message là String để nhất quán
-        res.setMessage(errors.size() > 1 ? String.join(", ", errors) : errors.get(0));
+        res.setMessage(Objects.nonNull(attributes) ? mapAttribute(errorCode.getMessage(), attributes)
+                : errors.size() > 1 ? String.join(", ", errors) : errors.get(0));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
@@ -84,4 +107,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 
+    private String mapAttribute(String message, Map<String, Object> attributes) {
+        String minValue = String.valueOf(attributes.get(MIN_ATTRIBUTE));
+
+        return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
+    }
 }
